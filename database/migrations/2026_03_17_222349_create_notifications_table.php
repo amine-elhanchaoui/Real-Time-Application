@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('from_user_id');
             $table->unsignedBigInteger('to_user_id');
-            $table->foreign('from_user_id')->references('id')->on('utilisateurs')->cascadeOnDelete();
-            $table->foreign('to_user_id')->references('id')->on('utilisateurs')->cascadeOnDelete();
+            $table->foreign('from_user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('to_user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->string('type');
             $table->json('data');
             $table->boolean('is_read')->default(false);

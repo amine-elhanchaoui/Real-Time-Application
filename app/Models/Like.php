@@ -6,15 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Like extends Model
 {
+    protected $fillable = ['user_id', 'post_id'];
     // 👤 user
     public function user()
     {
-        return $this->belongsTo(Utilisateur::class);
+        return $this->belongsTo(User::class);
     }
 
-    // 🎯 target (post or comment)
-    public function likeable()
+    // 🎯 target post
+    public function post()
     {
-        return $this->morphTo();
+        return $this->belongsTo(Post::class);
     }
 }

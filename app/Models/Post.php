@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
 {
+    protected $fillable = ['user_id', 'title', 'content'];
     // 👤 owner
     public function user()
     {
-        return $this->belongsTo(Utilisateur::class);
+        return $this->belongsTo(User::class);
     }
 
     // 💬 comments
@@ -18,9 +19,9 @@ class Post extends Model
         return $this->hasMany(Comment::class);
     }
 
-    // ❤️ likes (polymorphic)
+    // ❤️ likes
     public function likes()
     {
-        return $this->morphMany(Like::class, 'likeable');
+        return $this->hasMany(Like::class);
     }
 }
