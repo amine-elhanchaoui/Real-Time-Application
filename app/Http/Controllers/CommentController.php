@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Comment;
+use App\Models\Post;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
 class CommentController extends Controller
 {
@@ -38,6 +40,19 @@ class CommentController extends Controller
             'post_id'=>$request->post_id,
             'content'=>$request->content,
         ]);
+
+        $post = Post::find($request->post_id);
+        if ($post && $post->user_id !== Auth::id()) {
+            Notification::create([
+                'from_user_id' => Auth::id(),
+                'to_user_id' => $post->user_id,
+                'type' => 'comment',
+                'data' => [
+                    'post_id' => $post->id,
+                    'message' => Auth::user()->name . ' commented on your post.',
+                ],
+            ]);
+        }
         $comment->load('user');
         return response()->json($comment);
     }

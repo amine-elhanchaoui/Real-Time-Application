@@ -37,7 +37,8 @@ class ProfileController extends Controller
     public function show(string $id)
     {
         //
-        $profile=User::with(['posts','comments','likes'])->findOrFail($id);
+        $profile = User::with(['profile', 'posts.user.profile', 'comments.user.profile', 'likes.user'])
+            ->findOrFail($id);
         return response()->json($profile);
     }
 
@@ -54,15 +55,27 @@ class ProfileController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
-        $profile=User::findOrFail($id);
-        $profile->update([
-            'name'=>$request->name,
-            'email'=>$request->email,
-            'bio'=>$request->bio,
-            'profile_image'=>$request->profile_image,
+        $user = User::findOrFail($id);
+        
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
         ]);
-        return response()->json($profile);
+
+        if ($user->profile) {
+            $user->profile->update([
+                'bio' => $request->bio,
+                'profile_image' => $request->profile_image,
+            ]);
+        } else {
+            $user->profile()->create([
+                'username' => strtolower(str_replace(' ', '', $user->name)), // simple default
+                'bio' => $request->bio,
+                'profile_image' => $request->profile_image,
+            ]);
+        }
+
+        return response()->json($user->load('profile'));
     }
 
     /**

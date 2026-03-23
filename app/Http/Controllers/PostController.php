@@ -11,11 +11,17 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //
-        $posts= Post::with(['user','comments.user',  'likes.user'])->get();
-        return view('posts.index', compact('posts'));
+        $posts = Post::with(['user.profile', 'comments.user.profile', 'likes.user'])
+            ->latest()
+            ->paginate(10);
+        
+        return response()->json($posts);
+        
+
+        
     }
 
     /**
@@ -32,17 +38,25 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
         $request->validate([
-            'content' => 'required|string|max:255',
-            'title'=>'required|string|max:255',
+            'content' => 'required|string|max:500',
+            'title' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('posts', 'public');
+        }
+
         $post = Post::create([
-            'user_id'=>Auth::id(),
-            'content'=>$request->content,
-            'title'=>$request->title,
+            'user_id' => Auth::id(),
+            'content' => $request->content,
+            'title' => $request->title,
+            'image' => $imagePath,
         ]);
-        return response()->json($post);
+
+        return response()->json($post->load('user.profile'));
     }
 
     /**
