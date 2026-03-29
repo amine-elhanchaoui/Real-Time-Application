@@ -37,7 +37,7 @@ export default function Navbar() {
         <nav className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <Link to="/" className="text-2xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent tracking-tighter">
-                    GRAVITY
+                    Komuniziert
                 </Link>
                 <div className="flex items-center gap-6">
                     {token ? (
