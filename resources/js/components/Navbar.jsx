@@ -1,16 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
     const navigate = useNavigate();
-    const token = localStorage.getItem('token');
+    const [token, setToken] = useState(() => localStorage.getItem('token'));
+    const [unreadCount, setUnreadCount] = useState(0);
 
-    const [unreadCount, setUnreadCount] = React.useState(0);
+    useEffect(() => {
+        const handleAuthChange = () => {
+            setToken(localStorage.getItem('token'));
+        };
+        window.addEventListener('auth-change', handleAuthChange);
+        return () => window.removeEventListener('auth-change', handleAuthChange);
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user_id');
+        window.dispatchEvent(new Event('auth-change'));
         navigate('/login');
     };
 
@@ -29,8 +37,16 @@ export default function Navbar() {
         };
 
         fetchUnreadCount();
-        const interval = setInterval(fetchUnreadCount, 10000); // Poll every 10s
-        return () => clearInterval(interval);
+
+        const userId = localStorage.getItem('user_id');
+        if (window.Echo && userId) {
+            window.Echo.private(`App.Models.User.${userId}`)
+                .listen('GotNewNotification', (e) => {
+                    setUnreadCount(prev => prev + 1);
+                });
+                
+            return () => window.Echo.leaveChannel(`App.Models.User.${userId}`);
+        }
     }, [token]);
 
     return (

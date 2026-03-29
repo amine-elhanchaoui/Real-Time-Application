@@ -9,7 +9,17 @@ export default function Notifications() {
 
     useEffect(() => {
         fetchNotifications();
-    }, []);
+        
+        const userId = localStorage.getItem('user_id');
+        if (window.Echo && userId) {
+            window.Echo.private(`App.Models.User.${userId}`)
+                .listen('GotNewNotification', (e) => {
+                    fetchNotifications();
+                });
+                
+            return () => window.Echo.leaveChannel(`App.Models.User.${userId}`);
+        }
+    }, [token]);
 
     const fetchNotifications = async () => {
         try {

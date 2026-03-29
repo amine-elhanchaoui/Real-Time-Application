@@ -60,7 +60,7 @@ class NotificationTest extends TestCase
         Notification::factory()->count(3)->create([
             'to_user_id' => $user->id,
             'is_read' => false,
-            'data' => json_encode(['message' => 'Test']),
+            'data' => ['message' => 'Test'],
             'from_user_id' => User::factory()->create()->id,
             'type' => 'like'
         ]);

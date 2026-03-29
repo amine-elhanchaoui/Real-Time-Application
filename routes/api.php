@@ -19,6 +19,9 @@ Route::middleware('auth:sanctum')->group(function() {
     // Posts
     Route::apiResource('posts', \App\Http\Controllers\PostController::class);
     
+    // Profile
+    Route::get('/profile/{id}', [\App\Http\Controllers\ProfileController::class, 'show']);
+
     // Comments
     Route::post('comments', [\App\Http\Controllers\CommentController::class, 'store']);
     Route::get('posts/{id}/comments', [\App\Http\Controllers\CommentController::class, 'getByPostId']);

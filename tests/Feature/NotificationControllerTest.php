@@ -13,30 +13,18 @@ class NotificationControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        
-        Route::middleware('web')->group(function () {
-            Route::get('/notifications', [NotificationController::class, 'index']);
-            Route::put('/notifications/{id}/mark-read', [NotificationController::class, 'MarkAsRead']);
-        });
-    }
-
     public function test_user_can_get_notifications()
     {
         $user = User::factory()->create();
         
-        // Ensure Notification model has 'to_user_id' appropriately.
-        // If there are other required fields, this might fail, but let's assume standard usage.
         Notification::create([
             'to_user_id' => $user->id,
             'from_user_id' => $user->id,
             'type' => 'test',
-            'data' => json_encode(['foo' => 'bar'])
+            'data' => ['foo' => 'bar']
         ]);
 
-        $response = $this->actingAs($user)->getJson('/notifications');
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/notifications');
 
         $response->assertStatus(200);
         $response->assertJsonCount(1);
@@ -50,11 +38,11 @@ class NotificationControllerTest extends TestCase
             'to_user_id' => $user->id,
             'from_user_id' => $user->id,
             'type' => 'test',
-            'data' => json_encode(['foo' => 'bar']),
+            'data' => ['foo' => 'bar'],
             'is_read' => false
         ]);
 
-        $response = $this->actingAs($user)->putJson('/notifications/' . $notification->id . '/mark-read');
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/notifications/' . $notification->id . '/read');
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('notifications', [
@@ -72,11 +60,11 @@ class NotificationControllerTest extends TestCase
             'to_user_id' => $owner->id,
             'from_user_id' => $otherUser->id,
             'type' => 'test',
-            'data' => json_encode(['foo' => 'bar']),
+            'data' => ['foo' => 'bar'],
             'is_read' => false
         ]);
 
-        $response = $this->actingAs($otherUser)->putJson('/notifications/' . $notification->id . '/mark-read');
+        $response = $this->actingAs($otherUser, 'sanctum')->postJson('/api/notifications/' . $notification->id . '/read');
 
         $response->assertStatus(403);
         $this->assertDatabaseHas('notifications', [

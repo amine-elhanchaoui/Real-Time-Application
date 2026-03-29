@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
@@ -6,6 +6,25 @@ export default function PostCard({ post, onRefresh }) {
     const [showComments, setShowComments] = useState(false);
     const [commentContent, setCommentContent] = useState('');
     const token = localStorage.getItem('token');
+
+    useEffect(() => {
+        if (!window.Echo) return;
+
+        const channel = window.Echo.channel(`post.${post.id}`);
+        
+        channel.listen('GotNewComment', (e) => {
+            onRefresh();
+        })
+        .listen('GotNewLike', (e) => {
+            onRefresh();
+        });
+
+        return () => {
+            if (window.Echo) {
+                window.Echo.leaveChannel(`post.${post.id}`);
+            }
+        };
+    }, [post.id]);
 
     const handleLike = async () => {
         try {

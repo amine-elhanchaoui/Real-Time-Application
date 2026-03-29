@@ -25,7 +25,7 @@ class NotificationFactory extends Factory
             'to_user_id' => User::factory(),
             'type' => $this->faker->randomElement(['like', 'comment']),
             'data' => [
-                'message' => $this->faker->sentence,
+                'message' => $this->faker->sentence(),
                 'post_id' => 1, // dummy
             ],
             'is_read' => false,

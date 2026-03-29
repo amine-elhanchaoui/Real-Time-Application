@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
+import PostDetails from './pages/PostDetails';
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/profile/:id" element={<Profile />} />
                         <Route path="/notifications" element={<Notifications />} />
+                        <Route path="/post/:id" element={<PostDetails />} />
                     </Routes>
                 </main>
             </div>

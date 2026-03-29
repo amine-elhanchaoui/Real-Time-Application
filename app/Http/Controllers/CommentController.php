@@ -41,9 +41,12 @@ class CommentController extends Controller
             'content'=>$request->content,
         ]);
 
+        $comment->load('user.profile');
+        broadcast(new \App\Events\GotNewComment($request->post_id, $comment))->toOthers();
+
         $post = Post::find($request->post_id);
         if ($post && $post->user_id !== Auth::id()) {
-            Notification::create([
+            $notification = Notification::create([
                 'from_user_id' => Auth::id(),
                 'to_user_id' => $post->user_id,
                 'type' => 'comment',
@@ -52,8 +55,9 @@ class CommentController extends Controller
                     'message' => Auth::user()->name . ' commented on your post.',
                 ],
             ]);
+            $notification->load('sender.profile');
+            broadcast(new \App\Events\GotNewNotification($post->user_id, $notification));
         }
-        $comment->load('user');
         return response()->json($comment);
     }
 

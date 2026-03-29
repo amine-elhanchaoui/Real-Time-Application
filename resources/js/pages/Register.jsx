@@ -6,18 +6,36 @@ export default function Register() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('');
+    const [bio, setBio] = useState('');
+    const [image, setImage] = useState(null);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('username', username);
+        formData.append('bio', bio);
+        if (image) {
+            formData.append('profile_image', image);
+        }
+
         try {
-            const response = await axios.post('/api/register', { name, email, password });
+            const response = await axios.post('/api/register', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user_id', response.data.user.id);
+            window.dispatchEvent(new Event('auth-change'));
+            if (window.initEcho) window.initEcho();
             navigate('/');
         } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed');
+            setError(err.response?.data?.message || err.response?.data?.errors?.username?.[0] || 'Registration failed');
         }
     };
 
@@ -32,43 +50,67 @@ export default function Register() {
                         {error}
                     </div>
                 )}
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-2">Full Name</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
-                            placeholder="John Doe"
+                            placeholder="Full Name"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-2">Email Address</label>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+                            placeholder="Unique Username"
+                            required
+                        />
+                    </div>
+                    <div>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
-                            placeholder="you@example.com"
+                            placeholder="Email Address"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-2">Password</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
-                            placeholder="••••••••"
+                            placeholder="Password"
                             required
+                        />
+                    </div>
+                    <div>
+                        <textarea
+                            value={bio}
+                            onChange={(e) => setBio(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+                            placeholder="Tell us a bit about yourself! (Bio)"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-2">Profile Image (Optional)</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setImage(e.target.files[0])}
+                            className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20 transition-all cursor-pointer"
                         />
                     </div>
                     <button
                         type="submit"
-                        className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20 transform transition-all active:scale-95"
+                        className="w-full py-4 mt-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20 transform transition-all active:scale-95"
                     >
                         Get Started
                     </button>

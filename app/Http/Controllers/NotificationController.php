@@ -13,7 +13,7 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        //
+        //notification here take the sender(user) and receiver(user) and each user has a profile
         $notifications = Notification::with('sender.profile','receiver.profile')
             ->where('to_user_id', Auth::id())
             ->latest()
@@ -79,11 +79,11 @@ class NotificationController extends Controller
 
     public function markAsRead(string $id)
     {
-        $notifiation=Notification::findOrFail($id);
-        if($notifiation->to_user_id != Auth::id()){
+        $notification=Notification::findOrFail($id);
+        if($notification->to_user_id != Auth::id()){
             return response()->json(['error'=>'Unauthorized'],403);
         }
-        $notifiation->update(['is_read'=>true]);
+        $notification->update(['is_read'=>true]);
         return response()->json(['message'=>'Notification marked as read']);
     }
 }

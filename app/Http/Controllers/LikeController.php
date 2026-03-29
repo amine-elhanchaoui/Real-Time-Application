@@ -16,6 +16,7 @@ class LikeController extends Controller
         $like = Like::where('post_id', $request->post_id)->where('user_id', Auth::id())->first();
         if($like){
             $like->delete();
+            broadcast(new \App\Events\GotNewLike($request->post_id))->toOthers();
             return response()->json(['message'=>'Like deleted successfully']);
         }else{
             $like = Like::create([
@@ -23,9 +24,11 @@ class LikeController extends Controller
                 'post_id'=>$request->post_id,
             ]);
 
+            broadcast(new \App\Events\GotNewLike($request->post_id))->toOthers();
+
             $post = Post::find($request->post_id);
             if ($post && $post->user_id !== Auth::id()) {
-                Notification::create([
+                $notification = Notification::create([
                     'from_user_id' => Auth::id(),
                     'to_user_id' => $post->user_id,
                     'type' => 'like',
@@ -34,6 +37,8 @@ class LikeController extends Controller
                         'message' => Auth::user()->name . ' liked your post.',
                     ],
                 ]);
+                $notification->load('sender.profile');
+                broadcast(new \App\Events\GotNewNotification($post->user_id, $notification));
             }
             return response()->json(['message'=>'Like created successfully']);
         }

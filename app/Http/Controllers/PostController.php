@@ -65,7 +65,7 @@ class PostController extends Controller
     public function show(string $id)
     {
         //
-        $post = Post::with(['user','comments.user',  'likes.user'])->findOrFail($id);
+        $post = Post::with(['user.profile', 'comments.user.profile', 'likes.user'])->findOrFail($id);
         return response()->json($post);
     }
 
