@@ -1,0 +1,41 @@
+{
+  "framework": "laravel",
+  "outputDirectory": "public",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "env": {
+    "APP_NAME": "@example APP_NAME",
+    "APP_ENV": "production",
+    "APP_KEY": "@example APP_KEY",
+    "APP_DEBUG": "false",
+    "APP_URL": "@example APP_URL",
+    "LOG_CHANNEL": "stack",
+    "BROADCAST_CONNECTION": "reverb",
+    "REVERB_APP_ID": "@example REVERB_APP_ID",
+    "REVERB_APP_KEY": "@example REVERB_APP_KEY",
+    "REVERB_APP_SECRET": "@example REVERB_APP_SECRET",
+    "REVERB_HOST": "@example REVERB_HOST",
+    "REVERB_PORT": "443",
+    "REVERB_SCHEME": "https",
+    "VITE_REVERB_APP_KEY": "@example VITE_REVERB_APP_KEY",
+    "VITE_REVERB_HOST": "@example VITE_REVERB_HOST",
+    "VITE_REVERB_PORT": "443",
+    "VITE_REVERB_SCHEME": "https"
+  },
+  "regions": ["arn1"],
+  "functions": {
+    "api/**/*.php": {
+      "runtime": "php-8.2"
+    }
+  },
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/public/index.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.php"
+    }
+  ]
+}

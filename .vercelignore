@@ -1,0 +1,15 @@
+storage
+bootstrap/cache
+node_modules
+.env
+.env.*.local
+.editorconfig
+.git
+.gitignore
+.gitattributes
+composer.lock
+package-lock.json
+phpunit.xml
+tests
+.phpunit.result.cache
+vite.log
