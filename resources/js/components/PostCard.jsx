@@ -1,147 +1,203 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { Heart, ChatCircle, PaperPlaneTilt, CircleNotch, WarningCircle, CheckCircle } from '@phosphor-icons/react';
+import { cn } from '../lib/utils';
 
 export default function PostCard({ post, onRefresh }) {
     const [showComments, setShowComments] = useState(false);
     const [commentContent, setCommentContent] = useState('');
+    const [commenting, setCommenting] = useState(false);
+    const [commentError, setCommentError] = useState('');
+    const [commentSuccess, setCommentSuccess] = useState(false);
+    const [liking, setLiking] = useState(false);
+    const [likeError, setLikeError] = useState('');
+
+    const currentUserId = localStorage.getItem('user_id');
     const token = localStorage.getItem('token');
+    const [optimisticLiked, setOptimisticLiked] = useState(post.likes?.some((like) => String(like.user_id) === String(currentUserId)));
+    const [optimisticLikeCount, setOptimisticLikeCount] = useState(post.likes?.length || 0);
+
+    useEffect(() => {
+        setOptimisticLiked(post.likes?.some((like) => String(like.user_id) === String(currentUserId)));
+        setOptimisticLikeCount(post.likes?.length || 0);
+    }, [post.likes, currentUserId]);
 
     useEffect(() => {
         if (!window.Echo) return;
-
         const channel = window.Echo.channel(`post.${post.id}`);
-        
-        channel.listen('GotNewComment', (e) => {
-            onRefresh();
-        })
-        .listen('GotNewLike', (e) => {
-            onRefresh();
-        });
+        channel.listen('.GotNewComment', () => onRefresh()).listen('.GotNewLike', () => onRefresh());
+        return () => window.Echo.leaveChannel(`post.${post.id}`);
+    }, [post.id, onRefresh]);
 
-        return () => {
-            if (window.Echo) {
-                window.Echo.leaveChannel(`post.${post.id}`);
-            }
-        };
-    }, [post.id]);
+    const avatarUrl = (user) => {
+        if (!user?.profile?.profile_image) return null;
+        return user.profile.profile_image.startsWith('http') ? user.profile.profile_image : `/storage/${user.profile.profile_image}`;
+    };
 
     const handleLike = async () => {
+        if (liking) return;
+
+        setLikeError('');
+        const wasLiked = optimisticLiked;
+        setOptimisticLiked(!wasLiked);
+        setOptimisticLikeCount((value) => (wasLiked ? value - 1 : value + 1));
+        setLiking(true);
+
         try {
-            await axios.post('/api/likes/toggle', { post_id: post.id }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            onRefresh();
-        } catch (err) {
-            console.error(err);
+            await axios.post('/api/likes/toggle', { post_id: post.id }, { headers: { Authorization: `Bearer ${token}` } });
+        } catch (requestError) {
+            console.error(requestError);
+            setOptimisticLiked(wasLiked);
+            setOptimisticLikeCount((value) => (wasLiked ? value + 1 : value - 1));
+            setLikeError('Could not update like.');
+            setTimeout(() => setLikeError(''), 2500);
+        } finally {
+            setLiking(false);
         }
     };
 
-    const handleCommentSubmit = async (e) => {
-        e.preventDefault();
+    const handleCommentSubmit = async (event) => {
+        event.preventDefault();
+        if (!commentContent.trim() || commenting) return;
+
+        setCommenting(true);
+        setCommentError('');
+        setCommentSuccess(false);
         try {
-            await axios.post('/api/comments', { post_id: post.id, content: commentContent }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await axios.post(
+                '/api/comments',
+                { post_id: post.id, content: commentContent },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
             setCommentContent('');
+            setCommentSuccess(true);
+            setShowComments(true);
+            setTimeout(() => setCommentSuccess(false), 2500);
             onRefresh();
-        } catch (err) {
-            console.error(err);
+        } catch (requestError) {
+            console.error(requestError);
+            setCommentError(requestError.response?.data?.message || 'Could not send comment.');
+        } finally {
+            setCommenting(false);
         }
     };
 
     return (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl transition-all hover:border-slate-700">
-            <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <Link to={`/profile/${post.user_id}`} className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg overflow-hidden border border-slate-700 transition-transform active:scale-95">
-                        {post.user?.profile?.profile_image ? (
-                            <img 
-                                src={post.user.profile.profile_image.startsWith('http') ? post.user.profile.profile_image : `/storage/${post.user.profile.profile_image}`} 
-                                alt="" 
-                                className="w-full h-full object-cover" 
-                            />
+        <article className="surface overflow-hidden">
+            <div className="flex items-start justify-between gap-4 p-5">
+                <div className="flex min-w-0 items-center gap-3">
+                    <Link to={`/profile/${post.user_id}`} className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-800">
+                        {avatarUrl(post.user) ? (
+                            <img src={avatarUrl(post.user)} alt="" className="h-full w-full object-cover" />
                         ) : (
-                            post.user?.name?.charAt(0) || '?'
+                            <span className="text-sm font-semibold text-slate-300">{post.user?.name?.charAt(0)}</span>
                         )}
                     </Link>
-                    <div>
-                        <Link to={`/profile/${post.user_id}`} className="font-bold text-slate-100 hover:text-cyan-400 transition-colors">{post.user?.name}</Link>
-                        <p className="text-xs text-slate-500">{new Date(post.created_at).toLocaleDateString()}</p>
+                    <div className="min-w-0">
+                        <Link to={`/profile/${post.user_id}`} className="truncate text-sm font-semibold text-slate-100 hover:text-blue-400">
+                            {post.user?.name}
+                        </Link>
+                        <p className="text-xs text-slate-500">
+                            {new Date(post.created_at).toLocaleDateString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                            })}
+                        </p>
                     </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-slate-100">{post.title}</h3>
-                <p className="text-slate-400 whitespace-pre-wrap leading-relaxed mb-4">{post.content}</p>
-                {post.image && (
-                    <div className="rounded-2xl overflow-hidden border border-slate-800 mb-4">
-                        <img 
-                            src={post.image.startsWith('http') ? post.image : `/storage/${post.image}`} 
-                            alt="" 
-                            className="w-full h-auto max-h-[500px] object-cover" 
-                        />
-                    </div>
-                )}
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/50 flex items-center gap-6">
-                <button 
+            <div className="px-5 pb-5">
+                <h3 className="text-lg font-semibold text-slate-100">{post.title}</h3>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-300">{post.content}</p>
+            </div>
+
+            {post.image && (
+                <div className="border-y border-slate-800 bg-slate-950">
+                    <img src={post.image.startsWith('http') ? post.image : `/storage/${post.image}`} alt="" className="max-h-[520px] w-full object-contain" />
+                </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-3 border-t border-slate-800 px-5 py-4">
+                <button
                     onClick={handleLike}
-                    className="flex items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors group"
+                    disabled={liking}
+                    className={cn(
+                        "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition",
+                        optimisticLiked ? "bg-emerald-600/15 text-emerald-300" : "bg-slate-950 text-slate-300 hover:bg-slate-800"
+                    )}
                 >
-                    <div className="p-2 rounded-xl group-hover:bg-cyan-500/10 transition-colors">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                    </div>
-                    <span className="text-sm font-semibold">{post.likes?.length || 0}</span>
+                    {liking ? <CircleNotch className="h-4 w-4 animate-spin" /> : <Heart weight={optimisticLiked ? 'fill' : 'regular'} className="h-4 w-4" />}
+                    {optimisticLikeCount}
                 </button>
-                <button 
-                    onClick={() => setShowComments(!showComments)}
-                    className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors group"
+
+                <button
+                    onClick={() => setShowComments((value) => !value)}
+                    className={cn(
+                        "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition",
+                        showComments ? "bg-slate-800 text-white" : "bg-slate-950 text-slate-300 hover:bg-slate-800"
+                    )}
                 >
-                    <div className="p-2 rounded-xl group-hover:bg-blue-500/10 transition-colors">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                    </div>
-                    <span className="text-sm font-semibold">{post.comments?.length || 0}</span>
+                    <ChatCircle className="h-4 w-4" />
+                    {post.comments?.length || 0} comments
                 </button>
+
+                {likeError && <span className="text-xs text-red-300">{likeError}</span>}
             </div>
 
             {showComments && (
-                <div className="p-6 border-t border-slate-800 bg-slate-950/30">
-                    <div className="space-y-6 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                        {post.comments?.map(comment => (
-                            <div key={comment.id} className="flex gap-3">
-                                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 border border-slate-700">
-                                    {comment.user?.name?.charAt(0)}
+                <div className="border-t border-slate-800 bg-slate-950/50 p-5">
+                    <div className="custom-scrollbar mb-4 max-h-[360px] space-y-3 overflow-y-auto">
+                        {post.comments?.length ? (
+                            post.comments.map((comment) => (
+                                <div key={comment.id} className="surface-muted p-4">
+                                    <div className="mb-1 flex items-center justify-between gap-3">
+                                        <span className="text-sm font-medium text-slate-100">{comment.user?.name}</span>
+                                        <span className="text-xs text-slate-500">
+                                            {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-slate-300">{comment.content}</p>
                                 </div>
-                                <div className="bg-slate-800/50 rounded-2xl px-4 py-2 border border-slate-800/50 flex-1">
-                                    <p className="text-xs font-bold text-slate-300 mb-1">{comment.user?.name}</p>
-                                    <p className="text-sm text-slate-400">{comment.content}</p>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            <div className="surface-muted p-4 text-sm text-slate-400">No comments yet.</div>
+                        )}
                     </div>
-                    <form onSubmit={handleCommentSubmit} className="relative">
-                        <input
-                            type="text"
-                            value={commentContent}
-                            onChange={(e) => setCommentContent(e.target.value)}
-                            placeholder="Write a comment..."
-                            className="w-full bg-slate-800 border-none rounded-2xl py-3 pl-4 pr-12 text-sm focus:ring-1 focus:ring-cyan-500/50"
-                        />
-                        <button 
-                            type="submit"
-                            className="absolute right-2 top-1.5 p-1.5 text-cyan-500 hover:text-cyan-400"
-                        >
-                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                            </svg>
-                        </button>
+
+                    <form onSubmit={handleCommentSubmit} className="space-y-3">
+                        <div className="flex gap-3">
+                            <input
+                                value={commentContent}
+                                onChange={(event) => setCommentContent(event.target.value)}
+                                placeholder="Write a comment..."
+                                className="input-minimal"
+                                disabled={commenting}
+                            />
+                            <button type="submit" disabled={!commentContent.trim() || commenting} className="btn-primary px-4">
+                                {commenting ? <CircleNotch className="h-4 w-4 animate-spin" /> : <PaperPlaneTilt className="h-4 w-4" />}
+                            </button>
+                        </div>
+
+                        {commentError && (
+                            <div className="flex items-center gap-2 text-sm text-red-300">
+                                <WarningCircle className="h-4 w-4" />
+                                {commentError}
+                            </div>
+                        )}
+
+                        {commentSuccess && (
+                            <div className="flex items-center gap-2 text-sm text-emerald-300">
+                                <CheckCircle className="h-4 w-4" />
+                                Comment added.
+                            </div>
+                        )}
                     </form>
                 </div>
             )}
-        </div>
+        </article>
     );
 }

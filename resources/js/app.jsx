@@ -10,13 +10,14 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
 import PostDetails from './pages/PostDetails';
+import Chat from './pages/Chat';
 
 function App() {
     return (
         <Router>
-            <div className="min-h-screen bg-slate-950 text-slate-100 font-['Outfit']">
+            <div className="app-shell">
                 <Navbar />
-                <main className="container mx-auto px-4 py-8">
+                <main className="page-wrap">
                     <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/login" element={<Login />} />
@@ -24,6 +25,8 @@ function App() {
                         <Route path="/profile/:id" element={<Profile />} />
                         <Route path="/notifications" element={<Notifications />} />
                         <Route path="/post/:id" element={<PostDetails />} />
+                        <Route path="/chat" element={<Chat />} />
+                        <Route path="/chat/:userId" element={<Chat />} />
                     </Routes>
                 </main>
             </div>
@@ -33,6 +36,5 @@ function App() {
 
 const container = document.getElementById('app');
 if (container) {
-    const root = createRoot(container);
-    root.render(<App />);
+    createRoot(container).render(<App />);
 }

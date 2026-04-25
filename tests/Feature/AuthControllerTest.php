@@ -14,6 +14,7 @@ class AuthControllerTest extends TestCase
     {
         $response = $this->postJson('/api/register', [
             'name' => 'John Doe',
+            'username' => 'johndoe',
             'email' => 'john@example.com',
             'password' => 'password',
         ]);

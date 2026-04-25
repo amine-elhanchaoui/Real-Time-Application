@@ -10,7 +10,17 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory;
     //
-   protected $fillable = ['name', 'email', 'password'];
+   protected $fillable = ['name', 'email', 'password', 'is_online', 'last_seen_at'];
+
+    protected $casts = [
+        'is_online' => 'boolean',
+        'last_seen_at' => 'datetime',
+    ];
+
+    public function scopeOnline($query)
+    {
+        return $query->where('is_online', true);
+    }
     public function posts()
     {
         return $this->hasMany(Post::class);
@@ -40,7 +50,17 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class, 'from_user_id');
     }
     public function profile()
-{
-    return $this->hasOne(Profil::class);
-}
+    {
+        return $this->hasOne(Profil::class);
+    }
+
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id')->withTimestamps();
+    }
+
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')->withTimestamps();
+    }
 }

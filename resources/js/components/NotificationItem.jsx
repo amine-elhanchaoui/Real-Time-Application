@@ -1,43 +1,78 @@
-import React from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Heart, ChatCircle, UserPlus, Bell, CircleNotch } from '@phosphor-icons/react';
+import { cn } from '../lib/utils';
 
 export default function NotificationItem({ notification, onRead }) {
-    const { sender, type, data, created_at, is_read } = notification;
-    
-    // Parse data safely if it's a string (though Laravel should cast it)
-    const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
-    const message = notificationData?.message || 'New activity on your post';
+    const { from_user, type, is_read, created_at, id } = notification;
+    const [loading, setLoading] = useState(false);
+
+    const iconMap = {
+        like: <Heart className="h-4 w-4 text-rose-400" weight="fill" />,
+        comment: <ChatCircle className="h-4 w-4 text-blue-400" weight="fill" />,
+        follow: <UserPlus className="h-4 w-4 text-emerald-400" weight="fill" />,
+    };
+
+    const messageMap = {
+        like: 'liked your post',
+        comment: 'commented on your post',
+        follow: 'started following you',
+    };
+
+    const handleRead = async () => {
+        if (is_read || loading) return;
+        setLoading(true);
+        try {
+            await onRead(id);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const avatar = from_user?.profile?.profile_image;
 
     return (
-        <div 
-            onClick={() => !is_read && onRead(notification.id)}
-            className={`p-4 flex items-start gap-4 transition-all cursor-pointer hover:bg-slate-800/50 ${!is_read ? 'bg-cyan-500/5' : ''}`}
+        <button
+            onClick={handleRead}
+            className={cn(
+                "flex w-full items-center gap-4 px-6 py-4 text-left transition",
+                is_read ? "bg-transparent hover:bg-slate-900/60" : "bg-emerald-600/5 hover:bg-emerald-600/10"
+            )}
         >
-            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-700">
-                {sender?.profile?.profile_image ? (
-                    <img 
-                        src={sender.profile.profile_image.startsWith('http') ? sender.profile.profile_image : `/storage/${sender.profile.profile_image}`} 
-                        alt="" 
-                        className="w-full h-full object-cover" 
-                    />
-                ) : (
-                    <span className="text-slate-400 font-bold">{sender?.name?.charAt(0)}</span>
-                )}
+            <div className="relative">
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-slate-800">
+                    {avatar ? (
+                        <img src={avatar.startsWith('http') ? avatar : `/storage/${avatar}`} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                        <span className="text-sm font-semibold text-slate-300">{from_user?.name?.charAt(0) || '?'}</span>
+                    )}
+                </div>
+                <div className="absolute -bottom-1 -right-1 rounded-full border border-slate-900 bg-slate-900 p-1">
+                    {iconMap[type] || <Bell className="h-4 w-4 text-slate-400" />}
+                </div>
             </div>
-            <div className="flex-1 min-w-0">
-                <Link to={notificationData?.post_id ? `/post/${notificationData.post_id}` : '#'} className="block group">
-                    <p className={`text-sm ${is_read ? 'text-slate-400' : 'text-slate-200'} transition-colors group-hover:text-cyan-400`}>
-                        <span className="font-bold text-slate-100">{sender?.name}</span> {message}
-                    </p>
-                </Link>
-                <p className="text-xs text-slate-500 mt-1">
-                    {formatDistanceToNow(new Date(created_at), { addSuffix: true })}
+
+            <div className="min-w-0 flex-1">
+                <p className="text-sm text-slate-300">
+                    <span className="font-semibold text-slate-100">{from_user?.name}</span>{' '}
+                    {messageMap[type] || 'sent you a notification'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                    {new Date(created_at).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    })}
                 </p>
             </div>
-            {!is_read && (
-                <div className="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-lg shadow-cyan-500/50 mt-2"></div>
+
+            {loading ? (
+                <CircleNotch className="h-4 w-4 animate-spin text-slate-400" />
+            ) : !is_read ? (
+                <span className="h-2.5 w-2.5 rounded-full bg-blue-400" />
+            ) : (
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
             )}
-        </div>
+        </button>
     );
 }

@@ -1,101 +1,144 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Image, PaperPlaneTilt, X, CircleNotch, WarningCircle, CheckCircle } from '@phosphor-icons/react';
 
-export default function CreatePost({ onPostCreated }) {
+export default function CreatePost({ onRefresh }) {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [image, setImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [preview, setPreview] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
     const token = localStorage.getItem('token');
+    const profileImage = localStorage.getItem('profile_image');
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImage(file);
-            setImagePreview(URL.createObjectURL(file));
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            setError('Image size must be less than 2MB.');
+            return;
         }
+
+        setImage(file);
+        setPreview(URL.createObjectURL(file));
+        setError('');
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('content', content);
-            if (image) formData.append('image', image);
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (!title.trim() || !content.trim() || loading) return;
 
+        setLoading(true);
+        setError('');
+        setSuccess(false);
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('content', content);
+        if (image) formData.append('image', image);
+
+        try {
             await axios.post('/api/posts', formData, {
-                headers: { 
+                headers: {
                     Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
-                }
+                    'Content-Type': 'multipart/form-data',
+                },
             });
             setTitle('');
             setContent('');
             setImage(null);
-            setImagePreview(null);
-            onPostCreated();
-        } catch (err) {
-            console.error(err);
+            setPreview(null);
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 2500);
+            onRefresh();
+        } catch (requestError) {
+            setError(requestError.response?.data?.message || 'Unable to publish your post.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title of your post..."
-                    className="w-full bg-transparent text-xl font-bold border-none focus:ring-0 placeholder-slate-600 text-white"
-                    required
-                />
-                <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="What's on your mind?"
-                    className="w-full bg-transparent border-none focus:ring-0 resize-none min-h-[100px] placeholder-slate-600 text-slate-300"
-                    required
-                />
-                
-                {imagePreview && (
-                    <div className="relative mb-4 group">
-                        <img src={imagePreview} alt="Preview" className="w-full rounded-2xl border border-slate-700 max-h-96 object-cover" />
-                        <button 
-                            type="button"
-                            onClick={() => { setImage(null); setImagePreview(null); }}
-                            className="absolute top-2 right-2 p-2 bg-slate-900/80 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+        <section className="surface p-6">
+            <div className="mb-5">
+                <h2 className="section-title">Create a post</h2>
+                <p className="section-copy">Keep it simple. A clear title, useful text, and an image only when it helps.</p>
+            </div>
+
+            <div className="flex gap-4">
+                <div className="hidden sm:block">
+                    <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-800">
+                        {profileImage ? (
+                            <img src={profileImage} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                            <span className="text-sm font-semibold text-slate-300">U</span>
+                        )}
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="flex-1 space-y-4">
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(event) => setTitle(event.target.value)}
+                        placeholder="Post title"
+                        className="input-minimal"
+                        disabled={loading}
+                    />
+                    <textarea
+                        value={content}
+                        onChange={(event) => setContent(event.target.value)}
+                        placeholder="What do you want to share?"
+                        className="input-minimal min-h-[140px] resize-none"
+                        disabled={loading}
+                    />
+
+                    {preview && (
+                        <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
+                            <img src={preview} alt="Preview" className="max-h-[320px] w-full object-contain" />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setImage(null);
+                                    setPreview(null);
+                                }}
+                                className="absolute right-3 top-3 rounded-full bg-slate-900/90 p-2 text-slate-100"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+                            <Image className="h-5 w-5 text-slate-400" />
+                            Add image
+                            <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} disabled={loading} />
+                        </label>
+
+                        <button type="submit" disabled={!title.trim() || !content.trim() || loading} className="btn-primary min-w-[140px]">
+                            {loading ? <CircleNotch className="h-5 w-5 animate-spin" /> : <PaperPlaneTilt className="h-5 w-5" />}
+                            Publish
                         </button>
                     </div>
-                )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-                    <div className="flex items-center gap-2">
-                        <label className="p-2 text-cyan-400 hover:bg-cyan-400/10 rounded-xl cursor-pointer transition-colors">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                        </label>
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={loading || (!content.trim() && !image)}
-                        className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-2xl font-bold text-white shadow-lg shadow-cyan-500/20 transform transition-all active:scale-95 disabled:opacity-50"
-                    >
-                        {loading ? 'Posting...' : 'Post Now'}
-                    </button>
-                </div>
-            </form>
-        </div>
+                    {error && (
+                        <div className="surface-muted flex items-center gap-2 p-3 text-sm text-red-300">
+                            <WarningCircle className="h-4 w-4" />
+                            {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="surface-muted flex items-center gap-2 p-3 text-sm text-emerald-300">
+                            <CheckCircle className="h-4 w-4" />
+                            Your post was published.
+                        </div>
+                    )}
+                </form>
+            </div>
+        </section>
     );
 }

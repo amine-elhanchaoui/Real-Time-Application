@@ -1,11 +1,94 @@
-@import 'tailwindcss';
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@import "tailwindcss";
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-primary: #10b981;
+    --color-secondary: #065f46;
+    --color-accent: #34d399;
+    --color-background: #020617;
+    --color-surface: #0f172a;
+    --color-surface-soft: #111827;
+    --color-border: #1f2937;
+}
+
+@layer base {
+    html {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply min-h-screen bg-slate-950 text-slate-100 antialiased;
+        background-image:
+            radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 26rem),
+            radial-gradient(circle at top right, rgba(52, 211, 153, 0.08), transparent 20rem);
+    }
+
+    #app {
+        @apply min-h-screen;
+    }
+}
+
+@layer components {
+    .app-shell {
+        @apply min-h-screen bg-transparent text-slate-100;
+    }
+
+    .page-wrap {
+        @apply mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8;
+    }
+
+    .surface {
+        @apply rounded-2xl border border-slate-800/80 bg-slate-900/80 shadow-[0_12px_40px_rgba(2,6,23,0.32)] backdrop-blur;
+    }
+
+    .surface-muted {
+        @apply rounded-2xl border border-slate-800/70 bg-slate-900/50;
+    }
+
+    .card-minimal {
+        @apply rounded-2xl border border-slate-800/80 bg-slate-900/80 shadow-[0_12px_40px_rgba(2,6,23,0.32)] backdrop-blur;
+    }
+
+    .btn-base {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/20;
+    }
+
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50 border border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-600 hover:bg-slate-800;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50 border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20;
+    }
+
+    .input-minimal {
+        @apply w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20;
+    }
+
+    .section-title {
+        @apply text-lg font-semibold text-slate-100;
+    }
+
+    .section-copy {
+        @apply text-sm text-slate-400;
+    }
+
+    .status-chip {
+        @apply inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium text-slate-300;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply rounded-full bg-slate-700;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
 }

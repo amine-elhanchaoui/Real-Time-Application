@@ -39,8 +39,13 @@ class PostControllerTest extends TestCase
         $response = $this->actingAs($user)->get('/posts');
 
         $response->assertStatus(200);
-        $response->assertViewIs('posts.index');
-        $response->assertViewHas('posts');
+        $response->assertJsonStructure([
+            'data' => [
+                '*' => ['id', 'title', 'content', 'user_id']
+            ],
+            'current_page',
+            'last_page'
+        ]);
     }
 
     public function test_user_can_create_post()
