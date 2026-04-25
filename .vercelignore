@@ -13,3 +13,14 @@ phpunit.xml
 tests
 .phpunit.result.cache
 vite.log
+
+APP_KEY=base64:lichPU5jfTdRCsqj8GdfVg02e5Ti1fM50Go7TsKdIJI=
+APP_URL=https://your-vercel-domain.vercel.app
+BROADCAST_CONNECTION=reverb
+REVERB_APP_KEY=mahjxw2mjavcnx8kpmva
+REVERB_APP_ID=460712
+REVERB_APP_SECRET=5gkfyesa89eipvegd8ac
+VITE_REVERB_APP_KEY=mahjxw2mjavcnx8kpmva
+VITE_REVERB_HOST=your-vercel-domain.vercel.app
+VITE_REVERB_SCHEME=https
+VITE_REVERB_PORT=443
