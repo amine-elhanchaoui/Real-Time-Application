@@ -3,6 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "start": "concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#34d399,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"php artisan reverb:start\" \"npm run dev\" --names=server,queue,logs,reverb,vite --kill-others",
         "build": "vite build",
         "dev": "vite"
     },
@@ -12,8 +13,10 @@
         "@vitejs/plugin-react": "^4.3.4",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
+        "html-docx-js": "^0.3.1",
         "laravel-echo": "^2.3.1",
         "laravel-vite-plugin": "^2.0.0",
+        "playwright": "^1.60.0",
         "pusher-js": "^8.4.3",
         "tailwindcss": "^4.0.0",
         "vite": "^7.0.7"

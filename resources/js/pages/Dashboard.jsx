@@ -1,137 +1,103 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CircleNotch, WarningCircle, UsersThree } from '@phosphor-icons/react';
+import { Sparkle, UsersThree } from '@phosphor-icons/react';
 import CreatePost from '../components/CreatePost';
-import PostCard from '../components/PostCard';
+import InfinitePostList from '../components/InfinitePostList';
 import { usePresence } from '../hooks/usePresence';
 
 export default function Dashboard() {
-    const [posts, setPosts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [feedKey, setFeedKey] = useState(0);
     const { onlineUsers } = usePresence();
     const token = localStorage.getItem('token');
     const currentUserId = localStorage.getItem('user_id');
     const currentUserName = localStorage.getItem('user_name') || 'there';
 
-    useEffect(() => {
-        fetchPosts();
-    }, []);
-
-    const fetchPosts = async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const response = await axios.get('/api/posts', {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const postsData = response.data.data || response.data;
-            setPosts(Array.isArray(postsData) ? postsData : []);
-        } catch (requestError) {
-            console.error(requestError);
-            setError('Unable to load the feed right now.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const otherOnlineUsers = onlineUsers.filter((user) => String(user.id) !== String(currentUserId));
 
     return (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
             <div className="space-y-6">
-                <section className="surface p-6">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <section className="surface-glow overflow-hidden p-6 sm:p-8">
+                    <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-slate-100">Welcome back, {currentUserName}</h1>
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-                                Share an update, see what people posted, and jump into conversations without all the extra noise.
+                            <div className="mb-2 flex items-center gap-2">
+                                <Sparkle className="h-4 w-4 text-fuchsia-400" weight="fill" />
+                                <span className="text-xs font-bold uppercase tracking-widest text-violet-400">Your Feed</span>
+                            </div>
+                            <h1 className="text-3xl font-bold text-white">
+                                Hey, <span className="text-gradient">{currentUserName}</span>
+                            </h1>
+                            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
+                                Scroll for more posts. Like, comment, and chat in real time.
                             </p>
                         </div>
-                        <div className="flex gap-3">
-                            <div className="status-chip">{posts.length} posts loaded</div>
-                            <div className="status-chip">{otherOnlineUsers.length} online now</div>
+                        <div className="stat-card flex items-center gap-3 px-4 py-3">
+                            <UsersThree className="h-5 w-5 text-teal-400" weight="duotone" />
+                            <div>
+                                <p className="text-lg font-bold text-white">{otherOnlineUsers.length}</p>
+                                <p className="text-xs text-slate-500">Online now</p>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <CreatePost onRefresh={fetchPosts} />
-
-                {error && (
-                    <div className="surface-muted flex items-center gap-3 p-4 text-red-300">
-                        <WarningCircle className="h-5 w-5 shrink-0" />
-                        <span className="text-sm">{error}</span>
-                        <button onClick={fetchPosts} className="ml-auto text-sm text-white underline underline-offset-4">Retry</button>
-                    </div>
-                )}
+                <CreatePost onRefresh={() => setFeedKey((k) => k + 1)} />
 
                 <section className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="section-title">Latest posts</h2>
-                            <p className="section-copy">A clean feed with the most recent activity.</p>
-                        </div>
+                    <div className="flex items-center gap-3">
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Infinite feed</span>
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                     </div>
 
-                    {loading ? (
-                        <div className="surface flex min-h-[280px] flex-col items-center justify-center gap-4 p-10">
-                            <CircleNotch className="h-8 w-8 animate-spin text-emerald-400" />
-                            <p className="text-sm text-slate-400">Loading feed...</p>
-                        </div>
-                    ) : posts.length > 0 ? (
-                        posts.map((post) => <PostCard key={post.id} post={post} onRefresh={fetchPosts} />)
-                    ) : !error ? (
-                        <div className="surface p-10 text-center">
-                            <h3 className="text-base font-semibold text-slate-100">No posts yet</h3>
-                            <p className="mt-2 text-sm text-slate-400">Create the first post to start the conversation.</p>
-                        </div>
-                    ) : null}
+                    <InfinitePostList key={`${token}-${feedKey}`} token={token} />
                 </section>
             </div>
 
-            <aside className="space-y-6">
-                <section className="surface p-6">
-                    <div className="flex items-center gap-3">
-                        <div className="rounded-2xl bg-emerald-600/10 p-3 text-emerald-400 shadow-sm">
-                            <UsersThree className="h-5 w-5" />
+            <aside className="space-y-4">
+                <section className="surface-glow p-5">
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500/20 to-blue-500/20">
+                            <UsersThree className="h-5 w-5 text-teal-400" weight="duotone" />
                         </div>
                         <div>
-                            <h2 className="section-title">Online now</h2>
-                            <p className="section-copy">People you can message right away.</p>
+                            <h2 className="text-sm font-bold text-white">Online Now</h2>
+                            <p className="text-xs text-slate-500">Tap to message</p>
                         </div>
                     </div>
 
-                    <div className="mt-5 space-y-3">
+                    <div className="space-y-2">
                         {otherOnlineUsers.length > 0 ? (
                             otherOnlineUsers.slice(0, 8).map((user) => {
                                 const image = user.profile?.profile_image;
-                                const avatar = image ? `/storage/${image}` : null;
+                                const avatar = image?.startsWith('http') ? image : image ? `/storage/${image}` : null;
                                 return (
                                     <Link
                                         key={user.id}
-                                        to={`/profile/${user.id}`}
-                                        className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-3 transition hover:border-slate-700 hover:bg-slate-900"
+                                        to={`/chat/${user.id}`}
+                                        className="group flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 transition hover:border-violet-500/30 hover:bg-violet-500/5"
                                     >
-                                        <div className="relative">
-                                            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-800">
+                                        <div className="relative shrink-0">
+                                            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/20 to-fuchsia-500/20">
                                                 {avatar ? (
                                                     <img src={avatar} alt="" className="h-full w-full object-cover" />
                                                 ) : (
-                                                    <span className="text-sm font-semibold text-slate-300">{user.name?.charAt(0)}</span>
+                                                    <span className="text-xs font-bold text-violet-300">{user.name?.charAt(0)}</span>
                                                 )}
                                             </div>
-                                            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400" />
+                                            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#07070f] bg-teal-400" />
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="truncate text-sm font-medium text-slate-100">{user.name}</p>
-                                            <p className="text-xs text-slate-500">Available for chat</p>
+                                            <p className="truncate text-sm font-medium text-slate-200 group-hover:text-white">{user.name}</p>
+                                            <p className="text-[10px] text-teal-400">Message live</p>
                                         </div>
                                     </Link>
                                 );
                             })
                         ) : (
-                            <div className="surface-muted p-4 text-sm text-slate-400">Nobody else is online right now.</div>
+                            <div className="rounded-2xl border border-white/[0.06] p-4 text-center text-sm text-slate-500">
+                                Nobody else online right now.
+                            </div>
                         )}
                     </div>
                 </section>

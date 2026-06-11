@@ -164,12 +164,12 @@ export default function Profile() {
 
     return (
         <div className="space-y-6">
-            <section className="surface overflow-hidden">
-                <div className="h-32 bg-gradient-to-r from-emerald-600/20 via-slate-900 to-teal-500/10" />
+            <section className="surface-glow overflow-hidden">
+                <div className="h-36 bg-gradient-to-r from-blue-600/30 via-violet-600/20 to-fuchsia-600/20" />
                 <div className="px-6 pb-6 sm:px-8">
-                    <div className="-mt-14 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="-mt-16 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                            <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-slate-900 bg-slate-800">
+                            <div className="relative h-28 w-28 overflow-hidden rounded-2xl border-4 border-[#07070f] bg-gradient-to-br from-blue-500/20 to-fuchsia-500/20 ring-2 ring-violet-500/30">
                                 {profileImage || imagePreview ? (
                                     <img src={imagePreview || profileImage} alt="" className="h-full w-full object-cover" />
                                 ) : (
@@ -243,18 +243,18 @@ export default function Profile() {
                         {user.profile?.bio || 'No bio added yet.'}
                     </p>
 
-                    <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                        <div className="surface-muted p-4">
-                            <p className="text-2xl font-semibold text-slate-100">{user.posts?.length || 0}</p>
-                            <p className="mt-1 text-sm text-slate-500">Posts</p>
+                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                        <div className="stat-card text-center">
+                            <p className="text-2xl font-bold text-gradient">{user.posts?.length || 0}</p>
+                            <p className="mt-1 text-xs text-slate-500">Posts</p>
                         </div>
-                        <div className="surface-muted p-4">
-                            <p className="text-2xl font-semibold text-slate-100">{counts.followers_count}</p>
-                            <p className="mt-1 text-sm text-slate-500">Followers</p>
+                        <div className="stat-card text-center">
+                            <p className="text-2xl font-bold text-gradient">{counts.followers_count}</p>
+                            <p className="mt-1 text-xs text-slate-500">Followers</p>
                         </div>
-                        <div className="surface-muted p-4">
-                            <p className="text-2xl font-semibold text-slate-100">{counts.following_count}</p>
-                            <p className="mt-1 text-sm text-slate-500">Following</p>
+                        <div className="stat-card text-center">
+                            <p className="text-2xl font-bold text-gradient">{counts.following_count}</p>
+                            <p className="mt-1 text-xs text-slate-500">Following</p>
                         </div>
                     </div>
                 </div>
@@ -274,8 +274,8 @@ export default function Profile() {
             </section>
 
             {showEditModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-                    <div className="surface w-full max-w-lg p-6">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
+                    <div className="surface-glow w-full max-w-lg p-6">
                         <div className="mb-6 flex items-center justify-between">
                             <div>
                                 <h3 className="text-xl font-semibold text-slate-100">Edit profile</h3>

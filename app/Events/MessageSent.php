@@ -33,4 +33,9 @@ class MessageSent implements ShouldBroadcastNow
     {
         return 'MessageSent';
     }
+
+    public function broadcastWith(): array
+    {
+        return ['message' => $this->message];
+    }
 }

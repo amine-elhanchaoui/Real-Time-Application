@@ -1,8 +1,9 @@
 import './bootstrap';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import AuroraBackground from './components/AuroraBackground';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -13,9 +14,16 @@ import PostDetails from './pages/PostDetails';
 import Chat from './pages/Chat';
 
 function App() {
+    useEffect(() => {
+        if (localStorage.getItem('token') && window.initEcho) {
+            window.initEcho();
+        }
+    }, []);
+
     return (
         <Router>
             <div className="app-shell">
+                <AuroraBackground />
                 <Navbar />
                 <main className="page-wrap">
                     <Routes>

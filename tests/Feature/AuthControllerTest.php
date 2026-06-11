@@ -27,6 +27,22 @@ class AuthControllerTest extends TestCase
         ]);
     }
 
+    public function test_user_can_register_without_username()
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'Jane Doe',
+            'email' => 'jane@example.com',
+            'password' => 'password',
+        ]);
+
+        $response->assertStatus(200)
+                 ->assertJsonStructure(['user' => ['profile'], 'token']);
+
+        $this->assertDatabaseHas('profils', [
+            'username' => 'jane_doe',
+        ]);
+    }
+
     public function test_user_can_login()
     {
         $user = User::factory()->create([

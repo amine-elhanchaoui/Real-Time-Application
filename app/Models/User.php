@@ -10,7 +10,11 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory;
     //
-   protected $fillable = ['name', 'email', 'password', 'is_online', 'last_seen_at'];
+    protected $fillable = ['name', 'email', 'password', 'is_online', 'last_seen_at'];
+
+    protected $hidden = [
+        'password',
+    ];
 
     protected $casts = [
         'is_online' => 'boolean',

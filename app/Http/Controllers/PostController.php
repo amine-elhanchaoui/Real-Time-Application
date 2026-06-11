@@ -16,7 +16,7 @@ class PostController extends Controller
         //
         $posts = Post::with(['user.profile', 'comments.user.profile', 'likes.user'])
             ->latest()
-            ->paginate(10);
+            ->paginate(12);
         
         return response()->json($posts);
         

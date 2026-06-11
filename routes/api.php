@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function() {
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
 
     // Follows
@@ -46,4 +47,5 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::get('/messages/unread-count', [\App\Http\Controllers\ChatController::class, 'unreadCount']);
     Route::get('/messages/{userId}', [\App\Http\Controllers\ChatController::class, 'history']);
     Route::post('/messages', [\App\Http\Controllers\ChatController::class, 'send']);
+    Route::post('/messages/{userId}/read', [\App\Http\Controllers\ChatController::class, 'markAsRead']);
 });
